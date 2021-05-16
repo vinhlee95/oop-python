@@ -1,6 +1,23 @@
 from typing import Callable
 from time import time
+import functools
 
+def debug(func):
+	"""Print the function signature and return value"""
+	@functools.wraps(func)
+	def wrapper_debug(*args, **kwargs):
+		args_repr = [repr(a) for a in args]                     
+		kwargs_repr = [f"{k}={v}" for k, v in kwargs.items()] 
+		signature = ", ".join(args_repr + kwargs_repr)   
+
+		print(f"Calling {func.__name__} ({signature})")
+
+		value = func(*args, **kwargs)
+		print(f"{func.__name__!r} returned {value!r}")          
+		
+		return value
+
+	return wrapper_debug
 
 class MyDecorator:
 	def __init__(self, function: Callable) -> None:
@@ -26,20 +43,21 @@ def call_name(name: str):
 Passing argument to the class decorator
 """
 class MyDecoratorWithArgument(object):
-	def __init__(self, arg) -> None:
-		self._arg = arg
+	def __init__(self, func) -> None:
+		self.func = func
 
-	def __call__(self, *param_arg) -> None:
-		print(param_arg)
+	@debug
+	def __call__(self, *args, **kwargs) -> None:
+		return self.func(*args, **kwargs)
 
 
-@MyDecoratorWithArgument("foo")
+@MyDecoratorWithArgument
 def call_name_2(name: str):
-	return "FOo bar"
+	return f"Hello {name}"
 
 
-# message = call_name_2()
-# print(message)
+message = call_name_2("Foo")
+print(message)
 
 
 """
@@ -63,4 +81,4 @@ def main_function(first_numb: int, last_numb: int, optional: int) -> int:
 	return sum
 
 
-main_function(3, 4, optional=2)
+# main_function(3, 4, optional=2)
